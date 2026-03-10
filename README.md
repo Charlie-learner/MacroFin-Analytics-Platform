@@ -1,9 +1,3 @@
-这是一份为你量身定制的专业级中英文双语 `README.md` 文档。这份文档结构清晰、用词专业，非常适合展示在你的 GitHub 主页上，作为申请 FinTech 和 AI+金融方向研究生的核心项目展示。
-
-你可以直接复制以下 Markdown 内容，并在项目根目录下新建或覆盖原有的 `README.md` 文件：
-
----
-
 # 📊 MacroFin Analytics Platform
 
 > **A Big Data Analytics Platform for Global Finance and Macroeconomics**
