@@ -101,6 +101,15 @@
     <button class="btn" onclick="runQuery('macro')">2. GDP vs Unemployment</button>
     <button class="btn" onclick="runQuery('confidence')">3. Consumer Confidence Impact</button>
     <button class="btn" onclick="runQuery('commodity')">4. Oil & Gold Trend Analysis</button>
+    <button class="btn" onclick="runQuery('interestgdp')">5. Interest Rate vs GDP Growth</button>
+    <button class="btn" onclick="runQuery('phillips')">6. Phillips Curve (Inflation vs Unemployment)</button>
+    <button class="btn" onclick="runQuery('performance')">7. Stock Index Performance (Annual % Change)</button>
+    <button class="btn" onclick="runQuery('mainvestment')">8. M&A and Investment Trends</button>
+    <button class="btn" onclick="runQuery('realestate')">9. Real Estate & Interest Rate Analysis</button>
+    <button class="btn" onclick="runQuery('oilinflation')">10. Oil Price & Inflation Correlation</button>
+
+
+
 </div>
 
 <div class="result-stage">
@@ -144,6 +153,30 @@
         } else if (queryType === 'commodity') {
             apiUrl = 'http://localhost:8080/api/finance/commodities-trend';
             displayTitle = 'Commodity Markets: Historical Crude Oil vs Gold Prices';
+        } else if (queryType === 'interestgdp') {
+            apiUrl = 'http://localhost:8080/api/finance/interest-gdp-correlation';
+            displayTitle = 'Monetary Policy Analysis: Interest Rate Impact on GDP Growth';
+        } else if (queryType === 'phillips') {
+            apiUrl = 'http://localhost:8080/api/finance/phillips-curve';
+            displayTitle = 'Phillips Curve Analysis: Inflation Rate vs Unemployment Rate';
+        } else if (queryType === 'performance') {
+            apiUrl = 'http://localhost:8080/api/finance/stock-performance';
+            displayTitle = '三大股指年度涨跌幅对比：开盘价与收盘价变化率';
+        } else if (queryType === 'mainvestment') {
+            apiUrl = 'http://localhost:8080/api/finance/ma-investment-trend';
+            displayTitle = '企业并购与投资趋势分析：MA 交易、风投基金与破产率';
+        } else if (queryType === 'realestate') {
+            apiUrl = 'http://localhost:8080/api/finance/real-estate-interest';
+            displayTitle = 'Real Estate Market Analysis: Property Index vs Interest Rate';
+        } else if (queryType === 'oilinflation') {
+            apiUrl = 'http://localhost:8080/api/finance/oil-inflation-correlation';
+            displayTitle = 'Energy Economics Analysis: Crude Oil Price Impact on Inflation Rate';
+        } else if (queryType === 'funnel') {
+            apiUrl = 'http://localhost:8080/api/finance/investment-funnel';
+            displayTitle = 'Investment Funnel: M&A Deal Conversion Process';
+        } else if (queryType === 'radar') {
+            apiUrl = 'http://localhost:8080/api/finance/economic-health-radar';
+            displayTitle = 'Economic Health Radar: Multi-Dimensional Annual Assessment';
         }
 
         document.getElementById('currentQueryTitle').innerText = displayTitle;
@@ -162,6 +195,18 @@
                 console.error('API Error:', error);
             });
     }
+    //渐变色
+    function getColorByIndex(index) {
+        const colors = [
+            { start: '#3498db', end: '#2980b9' },
+            { start: '#2ecc71', end: '#27ae60' },
+            { start: '#e74c3c', end: '#c0392b' },
+            { start: '#f39c12', end: '#e67e22' },
+            { start: '#9b59b6', end: '#8e44ad' }
+        ];
+        return colors[index % colors.length];
+    }
+
 
     // 构建 ECharts 金融风格图表
     function buildChartOption(type, data) {
@@ -195,19 +240,52 @@
             };
         }
         else if (type === 'confidence') {
+            // 过滤掉 null 或无效数据
+            const validData = data.filter(item => item.confidence_bracket !== null && item.avg_spending !== null);
             option = {
-                tooltip: { trigger: 'axis' },
-                xAxis: { type: 'category', data: data.map(item => item.confidence_bracket + 's'), name: 'Confidence Bracket' },
-                yAxis: { type: 'value', name: 'Consumer Spending (Billion USD)' },
+                tooltip: {
+                    trigger: 'axis',
+                    formatter: function (param) {
+                        return `信心指数区间：${param.name}<br/>` +
+                               `平均消费支出：${param.value.toFixed(2)} Billion USD`;
+                    }
+                },
+                xAxis: {
+                    type: 'category',
+                    data: validData.map(item => item.confidence_bracket + 's'),
+                    name: 'Consumer Confidence Bracket',
+                    nameLocation: 'middle',
+                    nameGap: 25,
+                    axisLabel: {
+                        fontSize: 12,
+                        fontWeight: 'bold'
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: 'Consumer Spending (Billion USD)',
+                    nameLocation: 'middle',
+                    nameGap: 40,
+                    axisLabel: {
+                        fontSize: 12,
+                        fontWeight: 'bold'
+                    }
+                },
                 series: [{
                     type: 'line',
                     smooth: true,
-                    data: data.map(item => item.avg_spending),
+                    data: validData.map(item => item.avg_spending),
                     lineStyle: { width: 4, color: '#27ae60' },
-                    areaStyle: { color: 'rgba(39, 174, 96, 0.2)' }
+                    areaStyle: { color: 'rgba(39, 174, 96, 0.2)' },
+                    symbol: 'circle',
+                    symbolSize: 8,
+                    itemStyle: {
+                        color: '#27ae60'
+                    }
                 }]
             };
         }
+
         else if (type === 'commodity') {
             option = {
                 tooltip: { trigger: 'axis' },
@@ -223,7 +301,591 @@
                 ]
             };
         }
+
+        else if (type === 'interestgdp') {
+            option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'cross' }
+                },
+                legend: { data: ['Interest Rate (%)', 'GDP Growth (%)'] },
+                xAxis: {
+                    type: 'category',
+                    data: data.map(item => item.year_val),
+                    name: 'Year'
+                },
+                yAxis: [
+                    {
+                        type: 'value',
+                        name: 'Interest Rate (%)',
+                        position: 'left',
+                        axisLabel: { formatter: '{value}%' },
+                        splitLine: { show: true, lineStyle: { type: 'dashed' } }
+                    },
+                    {
+                        type: 'value',
+                        name: 'GDP Growth (%)',
+                        position: 'right',
+                        axisLabel: { formatter: '{value}%' },
+                        splitLine: { show: false }
+                    }
+                ],
+                series: [
+                    {
+                        name: 'Interest Rate (%)',
+                        type: 'line',
+                        data: data.map(item => item.avg_interest),
+                        smooth: true,
+                        lineStyle: { width: 4, color: '#e74c3c' },
+                        itemStyle: { color: '#e74c3c' },
+                        symbol: 'circle',
+                        symbolSize: 8
+                    },
+                    {
+                        name: 'GDP Growth (%)',
+                        type: 'line',
+                        yAxisIndex: 1,
+                        data: data.map(item => item.avg_gdp),
+                        smooth: true,
+                        lineStyle: { width: 4, color: '#2980b9' },
+                        itemStyle: { color: '#2980b9' },
+                        symbol: 'circle',
+                        symbolSize: 8
+                    }
+                ]
+            };
+        }
+
+        else if (type === 'phillips') {
+            // 准备散点图数据
+            const scatterData = data.map(item => [
+                parseFloat(item.avg_unemployment),
+                parseFloat(item.avg_inflation),
+                item.year_val
+            ]);
+
+            // 计算线性回归趋势线
+            const trendLine = calculateTrendLine(scatterData);
+
+            option = {
+                tooltip: {
+                    trigger: 'item',
+                    formatter: function (param) {
+                        return `年份：${param.data[2]}<br/>` +
+                            `失业率：${param.data[0].toFixed(2)}%<br/>` +
+                            `通胀率：${param.data[1].toFixed(2)}%`;
+                    }
+                },
+                title: {
+                    text: '',
+                    left: 'center'
+                },
+                legend: {
+                    data: ['Annual Data', 'Linear Trend'],
+                    bottom: 10
+                },
+                xAxis: {
+                    type: 'value',
+                    name: 'Unemployment Rate (%)',
+                    nameLocation: 'middle',
+                    nameGap: 30,
+                    scale: true,
+                    minOnZero: false,
+                    splitLine: { show: true, lineStyle: { type: 'dashed' } },
+                    axisLabel: { formatter: '{value}%' }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: 'Inflation Rate (%)',
+                    nameLocation: 'middle',
+                    nameGap: 40,
+                    scale: true,
+                    minOnZero: false,
+                    splitLine: { show: true, lineStyle: { type: 'dashed' } },
+                    axisLabel: { formatter: '{value}%' }
+                },
+                grid: {
+                    left: '12%',
+                    right: '12%',
+                    top: '15%',
+                    bottom: '15%'
+                },
+                series: [
+                    {
+                        name: 'Annual Data',
+                        type: 'scatter',
+                        data: scatterData,
+                        symbolSize: 14,
+                        itemStyle: {
+                            color: '#2980b9',
+                            shadowBlur: 10,
+                            shadowColor: 'rgba(41, 128, 185, 0.5)'
+                        },
+                        label: {
+                            show: true,
+                            formatter: function (param) {
+                                return param.data[2];
+                            },
+                            position: 'top',
+                            fontSize: 11,
+                            color: '#7f8c8d'
+                        },
+                        emphasis: {
+                            focus: 'series',
+                            itemStyle: {
+                                color: '#e74c3c',
+                                shadowBlur: 15,
+                                shadowColor: 'rgba(231, 76, 60, 0.8)'
+                            },
+                            label: {
+                                color: '#e74c3c',
+                                fontWeight: 'bold'
+                            }
+                        }
+                    },
+                    {
+                        name: 'Linear Trend',
+                        type: 'line',
+                        data: trendLine,
+                        smooth: false,
+                        symbol: 'none',
+                        lineStyle: {
+                            color: '#e74c3c',
+                            width: 3,
+                            type: 'solid'
+                        },
+                        emphasis: {
+                            lineStyle: {
+                                width: 5
+                            }
+                        }
+                    }
+                ]
+            };
+        }
+
+        else if (type === 'performance') {
+            // 按年份分组数据
+            const yearData = {};
+            data.forEach(item => {
+                const year = item.year_val;
+                if (!yearData[year]) {
+                    yearData[year] = [];
+                }
+                yearData[year].push({
+                    index: item.stock_index,
+                    change: parseFloat(item.change_percent)
+                });
+            });
+
+            const years = Object.keys(yearData).sort();
+
+            option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'shadow' },
+                    formatter: function (param) {
+                        let result = `<strong>${param.name}年</strong><br/>`;
+                        param.forEach(p => {
+                            const color = p.value >= 0 ? '#e74c3c' : '#2980b9';
+                            result += `<span style="color:${color}">● ${p.seriesName}: ${p.value.toFixed(2)}%</span><br/>`;
+                        });
+                        return result;
+                    }
+                },
+                legend: {
+                    data: ['道琼斯工业指数', '标普 500 指数', '纳斯达克指数'],
+                    bottom: 10
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '10%',
+                    top: '15%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: years,
+                    name: '年份',
+                    axisLine: { lineStyle: { width: 2, color: '#2c3e50' } },
+                    axisLabel: { fontSize: 12, fontWeight: 'bold' }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '涨跌幅 (%)',
+                    axisLabel: {
+                        formatter: '{value}%',
+                        fontSize: 12,
+                        fontWeight: 'bold'
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            type: 'dashed',
+                            color: '#bdc3c7'
+                        }
+                    },
+                    axisLine: { lineStyle: { width: 2, color: '#2c3e50' } }
+                },
+                series: [
+                    {
+                        name: '道琼斯工业指数',
+                        type: 'bar',
+                        barWidth: '30%',
+                        data: years.map(year => {
+                            const dj = yearData[year].find(d => d.index.includes('Dow'));
+                            return dj ? dj.change : 0;
+                        }),
+                        itemStyle: {
+                            color: function(params) {
+                                return params.value >= 0 ? '#e74c3c' : '#3498db';
+                            },
+                            borderRadius: [6, 6, 0, 0]
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                shadowBlur: 10,
+                                shadowColor: 'rgba(0, 0, 0, 0.3)'
+                            }
+                        }
+                    },
+                    {
+                        name: '标普 500 指数',
+                        type: 'bar',
+                        barWidth: '30%',
+                        data: years.map(year => {
+                            const sp = yearData[year].find(d => d.index.includes('S&P'));
+                            return sp ? sp.change : 0;
+                        }),
+                        itemStyle: {
+                            color: function(params) {
+                                return params.value >= 0 ? '#e67e22' : '#9b59b6';
+                            },
+                            borderRadius: [6, 6, 0, 0]
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                shadowBlur: 10,
+                                shadowColor: 'rgba(0, 0, 0, 0.3)'
+                            }
+                        }
+                    },
+                    {
+                        name: '纳斯达克指数',
+                        type: 'bar',
+                        barWidth: '30%',
+                        data: years.map(year => {
+                            const nas = yearData[year].find(d => d.index.includes('NASDAQ'));
+                            return nas ? nas.change : 0;
+                        }),
+                        itemStyle: {
+                            color: function(params) {
+                                return params.value >= 0 ? '#2ecc71' : '#1abc9c';
+                            },
+                            borderRadius: [6, 6, 0, 0]
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                shadowBlur: 10,
+                                shadowColor: 'rgba(0, 0, 0, 0.3)'
+                            }
+                        }
+                    }
+                ]
+            };
+        }
+
+        else if (type === 'mainvestment') {
+            option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross',
+                        crossStyle: {
+                            color: '#999'
+                        }
+                    }
+                },
+                legend: {
+                    data: ['MA Deals Count', 'VC Funding (Billion USD)', 'Bankruptcy Rate (%)'],
+                    bottom: 10
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '10%',
+                    top: '15%',
+                    containLabel: true
+                },
+                xAxis: [
+                    {
+                        type: 'category',
+                        data: data.map(item => item.year_val),
+                        name: 'Year',
+                        axisPointer: {
+                            type: 'shadow'
+                        },
+                        axisLine: { lineStyle: { width: 2, color: '#2c3e50' } },
+                        axisLabel: { fontSize: 12, fontWeight: 'bold' }
+                    }
+                ],
+                yAxis: [
+                    {
+                        type: 'value',
+                        name: 'MA Deals',
+                        position: 'left',
+                        axisLine: {
+                            show: true,
+                            lineStyle: { color: '#2980b9' }
+                        },
+                        axisLabel: {
+                            formatter: '{value}',
+                            fontSize: 11,
+                            color: '#2980b9'
+                        },
+                        splitLine: { show: false }
+                    },
+                    {
+                        type: 'value',
+                        name: 'VC Funding (Billion USD)',
+                        position: 'right',
+                        axisLine: {
+                            show: true,
+                            lineStyle: { color: '#27ae60' }
+                        },
+                        axisLabel: {
+                            formatter: '{value}',
+                            fontSize: 11,
+                            color: '#27ae60'
+                        },
+                        splitLine: { show: false }
+                    },
+                    {
+                        type: 'value',
+                        name: 'Bankruptcy Rate (%)',
+                        position: 'right',
+                        offset: 80,
+                        axisLine: {
+                            show: true,
+                            lineStyle: { color: '#e74c3c' }
+                        },
+                        axisLabel: {
+                            formatter: '{value}%',
+                            fontSize: 11,
+                            color: '#e74c3c'
+                        },
+                        splitLine: { show: false }
+                    }
+                ],
+                series: [
+                    {
+                        name: 'MA Deals Count',
+                        type: 'bar',
+                        barWidth: '40%',
+                        data: data.map(item => item.total_ma_deals),
+                        itemStyle: {
+                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                { offset: 0, color: '#3498db' },
+                                { offset: 1, color: '#2980b9' }
+                            ]),
+                            borderRadius: [6, 6, 0, 0]
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                shadowBlur: 10,
+                                shadowColor: 'rgba(0, 0, 0, 0.3)'
+                            }
+                        }
+                    },
+                    {
+                        name: 'VC Funding (Billion USD)',
+                        type: 'line',
+                        yAxisIndex: 1,
+                        data: data.map(item => parseFloat(item.total_vc_funding)),
+                        smooth: true,
+                        lineStyle: { width: 4, color: '#27ae60' },
+                        itemStyle: { color: '#27ae60' },
+                        symbol: 'circle',
+                        symbolSize: 8,
+                        areaStyle: {
+                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                { offset: 0, color: 'rgba(39, 174, 96, 0.3)' },
+                                { offset: 1, color: 'rgba(39, 174, 96, 0.05)' }
+                            ])
+                        }
+                    },
+                    {
+                        name: 'Bankruptcy Rate (%)',
+                        type: 'line',
+                        yAxisIndex: 2,
+                        data: data.map(item => parseFloat(item.avg_bankruptcy)),
+                        smooth: true,
+                        lineStyle: { width: 4, color: '#e74c3c', type: 'dashed' },
+                        itemStyle: { color: '#e74c3c' },
+                        symbol: 'rect',
+                        symbolSize: 8
+                    }
+                ]
+            };
+        }
+
+        else if (type === 'realestate') {
+            option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'cross' }
+                },
+                legend: { data: ['Real Estate Index', 'Interest Rate (%)'] },
+                xAxis: {
+                    type: 'category',
+                    data: data.map(item => item.year_val),
+                    name: 'Year'
+                },
+                yAxis: [
+                    {
+                        type: 'value',
+                        name: 'Real Estate Index',
+                        position: 'left',
+                        axisLabel: { formatter: '{value}' },
+                        splitLine: { show: true, lineStyle: { type: 'dashed' } }
+                    },
+                    {
+                        type: 'value',
+                        name: 'Interest Rate (%)',
+                        position: 'right',
+                        axisLabel: { formatter: '{value}%' },
+                        splitLine: { show: false }
+                    }
+                ],
+                series: [
+                    {
+                        name: 'Real Estate Index',
+                        type: 'bar',
+                        data: data.map(item => item.avg_real_estate),
+                        itemStyle: {
+                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                { offset: 0, color: '#3498db' },
+                                { offset: 1, color: '#2980b9' }
+                            ]),
+                            borderRadius: [6, 6, 0, 0]
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                shadowBlur: 10,
+                                shadowColor: 'rgba(0, 0, 0, 0.3)'
+                            }
+                        }
+                    },
+                    {
+                        name: 'Interest Rate (%)',
+                        type: 'line',
+                        yAxisIndex: 1,
+                        data: data.map(item => item.avg_interest),
+                        smooth: true,
+                        lineStyle: { width: 4, color: '#e74c3c' },
+                        itemStyle: { color: '#e74c3c' },
+                        symbol: 'circle',
+                        symbolSize: 8
+                    }
+                ]
+            };
+        }
+
+        else if (type === 'oilinflation') {
+            option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'cross' }
+                },
+                legend: { data: ['Crude Oil (USD/bbl)', 'Inflation Rate (%)'] },
+                xAxis: {
+                    type: 'category',
+                    data: data.map(item => item.year_val),
+                    name: 'Year'
+                },
+                yAxis: [
+                    {
+                        type: 'value',
+                        name: 'Crude Oil Price',
+                        position: 'left',
+                        axisLabel: { formatter: '{value} USD' },
+                        splitLine: { show: true, lineStyle: { type: 'dashed' } }
+                    },
+                    {
+                        type: 'value',
+                        name: 'Inflation Rate',
+                        position: 'right',
+                        axisLabel: { formatter: '{value}%' },
+                        splitLine: { show: false }
+                    }
+                ],
+                series: [
+                    {
+                        name: 'Crude Oil (USD/bbl)',
+                        type: 'bar',
+                        data: data.map(item => item.avg_oil),
+                        itemStyle: {
+                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                { offset: 0, color: '#f39c12' },
+                                { offset: 1, color: '#e67e22' }
+                            ]),
+                            borderRadius: [6, 6, 0, 0]
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                shadowBlur: 10,
+                                shadowColor: 'rgba(0, 0, 0, 0.3)'
+                            }
+                        }
+                    },
+                    {
+                        name: 'Inflation Rate (%)',
+                        type: 'line',
+                        yAxisIndex: 1,
+                        data: data.map(item => item.avg_inflation),
+                        smooth: true,
+                        lineStyle: { width: 4, color: '#e74c3c' },
+                        itemStyle: { color: '#e74c3c' },
+                        symbol: 'circle',
+                        symbolSize: 8
+                    }
+                ]
+            };
+        }
+
+
         return option;
+    }
+
+    // 最小二乘法计算线性回归趋势线
+    function calculateTrendLine(data) {
+        const n = data.length;
+        if (n < 2) return [];
+
+        let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+
+        data.forEach(point => {
+            const x = point[0];
+            const y = point[1];
+            sumX += x;
+            sumY += y;
+            sumXY += x * y;
+            sumXX += x * x;
+        });
+
+        // 计算斜率和截距
+        const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+        const intercept = (sumY - slope * sumX) / n;
+
+        // 生成趋势线的两个端点
+        const xValues = data.map(p => p[0]);
+        const minX = Math.min(...xValues);
+        const maxX = Math.max(...xValues);
+
+        return [
+            [minX, slope * minX + intercept],
+            [maxX, slope * maxX + intercept]
+        ];
     }
 </script>
 </body>
