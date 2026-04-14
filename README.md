@@ -118,7 +118,7 @@ LOCATION '/MacroFin_Analytics/';
 
 * 确保虚拟机的 HiveServer2 服务已成功启动。
 * 通过 Maven 编译并运行 Spring Boot 项目：
-
+* 注：需根据实际情况更改 '/src/main/resources/application.properties' 文件中的 `spring.datasource.url=jdbc:hive2://192.168.157.130:10000/hive_project_db` 中的 192.168.157.130 为你的实际 hiveserver2 的 IP
 ```bash
 mvn clean spring-boot:run
 
