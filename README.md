@@ -60,6 +60,7 @@ LOCATION '/MacroFin_Analytics/';
 mvn clean spring-boot:run
 
 ```
+Note: You must update the IP address `192.168.157.130` in the `spring.datasource.url=jdbc:hive2://192.168.157.130:10000/hive_project_db` entry within the `/src/main/resources/application.properties` file to your actual HiveServer2 IP address, based on your specific environment.
 
 **4. Access the Dashboard**
 Open your web browser and navigate to: `http://localhost:8080/index.html`
