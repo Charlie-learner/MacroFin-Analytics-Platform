@@ -45,9 +45,42 @@ hadoop fs -put finance_economics_dataset.csv /MacroFin_Analytics/
 Execute the DDL script in your Hive CLI to map the CSV data to an external table:
 
 ```sql
-CREATE EXTERNAL TABLE IF NOT EXISTS finance_economics (...) 
-ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' 
-LOCATION '/MacroFin_Analytics/';
+USE hive_project_db;
+
+DROP TABLE IF EXISTS finance_economics;
+
+CREATE EXTERNAL TABLE IF NOT EXISTS finance_economics (
+    trade_date STRING,
+    stock_index STRING,
+    open_price FLOAT,
+    close_price FLOAT,
+    daily_high FLOAT,
+    daily_low FLOAT,
+    trading_volume BIGINT,
+    gdp_growth FLOAT,
+    inflation_rate FLOAT,
+    unemployment_rate FLOAT,
+    interest_rate FLOAT,
+    consumer_confidence_index INT,
+    government_debt BIGINT,
+    corporate_profits BIGINT,
+    forex_usd_eur FLOAT,
+    forex_usd_jpy FLOAT,
+    crude_oil_price FLOAT,
+    gold_price FLOAT,
+    real_estate_index FLOAT,
+    retail_sales BIGINT,
+    bankruptcy_rate FLOAT,
+    ma_deals INT,
+    vc_funding FLOAT,
+    consumer_spending BIGINT
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+STORED AS TEXTFILE
+LOCATION '/MacroFin_Analytics/'
+TBLPROPERTIES ("skip.header.line.count"="1");
+
 
 ```
 
@@ -109,9 +142,42 @@ hadoop fs -put finance_economics_dataset.csv /MacroFin_Analytics/
 在 Hive 终端中执行建表语句，将底层 CSV 文件映射为外部表：
 
 ```sql
-CREATE EXTERNAL TABLE IF NOT EXISTS finance_economics (...) 
-ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' 
-LOCATION '/MacroFin_Analytics/';
+USE hive_project_db;
+
+DROP TABLE IF EXISTS finance_economics;
+
+CREATE EXTERNAL TABLE IF NOT EXISTS finance_economics (
+    trade_date STRING,
+    stock_index STRING,
+    open_price FLOAT,
+    close_price FLOAT,
+    daily_high FLOAT,
+    daily_low FLOAT,
+    trading_volume BIGINT,
+    gdp_growth FLOAT,
+    inflation_rate FLOAT,
+    unemployment_rate FLOAT,
+    interest_rate FLOAT,
+    consumer_confidence_index INT,
+    government_debt BIGINT,
+    corporate_profits BIGINT,
+    forex_usd_eur FLOAT,
+    forex_usd_jpy FLOAT,
+    crude_oil_price FLOAT,
+    gold_price FLOAT,
+    real_estate_index FLOAT,
+    retail_sales BIGINT,
+    bankruptcy_rate FLOAT,
+    ma_deals INT,
+    vc_funding FLOAT,
+    consumer_spending BIGINT
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+STORED AS TEXTFILE
+LOCATION '/MacroFin_Analytics/'
+TBLPROPERTIES ("skip.header.line.count"="1");
+
 
 ```
 
