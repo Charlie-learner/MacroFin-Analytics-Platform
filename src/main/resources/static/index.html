@@ -6,115 +6,469 @@
     <title>MacroFin Big Data Analytics Platform</title>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
     <style>
-        /* 页面整体背景，采用金融科技风的浅灰蓝底色 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f4f6f9;
-            margin: 0;
-            padding: 30px;
             color: #2c3e50;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-        .header h1 {
-            color: #1a252f;
-            font-size: 2.8em;
-            margin-bottom: 10px;
-            letter-spacing: 1px;
-        }
-        .header p {
-            color: #7f8c8d;
-            font-size: 1.2em;
+            overflow-x: hidden;
         }
 
-        /* 控制面板样式 */
-        .query-panel {
-            background: #ffffff;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            margin-bottom: 30px;
+        /* 登录页面样式 */
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .login-container.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .login-box {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 50px 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 420px;
+            max-width: 90%;
+            animation: slideUp 0.6s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .login-header {
             text-align: center;
+            margin-bottom: 35px;
         }
-        .query-panel h3 {
-            margin-top: 0;
+
+        .login-header h1 {
+            font-size: 2em;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .login-header p {
+            color: #7f8c8d;
+            font-size: 0.95em;
+        }
+
+        .login-icon {
+            font-size: 3.5em;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
             color: #34495e;
-            margin-bottom: 20px;
+            font-weight: 600;
+            font-size: 0.9em;
         }
-        /* 金融深蓝色系按钮 */
-        .btn {
-            background-color: #2c3e50;
+
+        .form-group input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            background: #fafafa;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group input::placeholder {
+            color: #bdc3c7;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            padding: 12px 24px;
-            margin: 8px;
-            border-radius: 6px;
-            font-size: 15px;
+            border-radius: 10px;
+            font-size: 16px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 2px 5px rgba(44, 62, 80, 0.3);
+            margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
         }
-        .btn:hover {
-            background-color: #34495e;
+
+        .login-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(44, 62, 80, 0.4);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
         }
-        .btn:active {
+
+        .login-btn:active {
             transform: translateY(0);
         }
 
-        /* 可视化图表舞台 */
+        .login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 0.85em;
+            margin-top: 8px;
+            display: none;
+            padding: 10px;
+            background: rgba(231, 76, 60, 0.1);
+            border-radius: 6px;
+            border-left: 3px solid #e74c3c;
+        }
+
+        .error-message.show {
+            display: block;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .login-footer {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            color: #95a5a6;
+            font-size: 0.85em;
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏样式 */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #1a252f 0%, #2c3e50 100%);
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 30px 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-header h1 {
+            color: #ffffff;
+            font-size: 1.6em;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+
+        .sidebar-header p {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.85em;
+        }
+
+        .sidebar-nav {
+            padding: 20px 15px;
+            flex: 1;
+        }
+
+        .nav-item {
+            background: rgba(255, 255, 255, 0.05);
+            color: #ecf0f1;
+            border: none;
+            padding: 14px 18px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-item:active {
+            transform: translateX(2px);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        .nav-number {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .nav-text {
+            flex: 1;
+            line-height: 1.4;
+        }
+
+        /* 主内容区域 */
+        .main-content {
+            margin-left: 280px;
+            flex: 1;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content-header {
+            margin-bottom: 30px;
+        }
+
+        .query-title-display {
+            color: #2980b9;
+            font-size: 1.8em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            min-height: 40px;
+        }
+
         .result-stage {
             background: #ffffff;
             padding: 30px;
             border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            min-height: 550px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            flex: 1;
+            min-height: 600px;
         }
-        .query-title-display {
-            text-align: center;
-            color: #2980b9;
-            margin-bottom: 20px;
-            font-size: 1.6em;
-            font-weight: bold;
-            min-height: 36px;
-        }
+
         #mainChart {
             width: 100%;
-            height: 500px;
+            height: 550px;
+        }
+
+        /* 滚动条美化 */
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 240px;
+            }
+
+            .main-content {
+                margin-left: 240px;
+                padding: 20px;
+            }
+
+            .sidebar-header h1 {
+                font-size: 1.3em;
+            }
+
+            .nav-item {
+                font-size: 13px;
+                padding: 12px 14px;
+            }
+
+            .login-box {
+                padding: 40px 30px;
+            }
+
+            .login-header h1 {
+                font-size: 1.7em;
+            }
         }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <h1>📊 MacroFin Analytics Platform</h1>
-    <p>Big Data Financial Insights powered by Hadoop & Hive</p>
+<!-- 登录界面 -->
+<div class="login-container" id="loginContainer">
+    <div class="login-box">
+        <div class="login-header">
+            <span class="login-icon">📊</span>
+            <h1>MacroFin</h1>
+            <p>Big Data Analytics Platform</p>
+        </div>
+
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    placeholder="Enter your username"
+                    required
+                    autocomplete="username"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    placeholder="Enter your password"
+                    required
+                    autocomplete="current-password"
+                >
+            </div>
+
+            <div class="error-message" id="errorMessage">
+                Invalid username or password. Please try again.
+            </div>
+
+            <button type="submit" class="login-btn" id="loginBtn">
+                Sign In
+            </button>
+        </form>
+
+        <div class="login-footer">
+            <p>Demo Credentials: admin / admin123</p>
+        </div>
+    </div>
 </div>
 
-<div class="query-panel">
-    <h3>Execute Macro-Financial Queries</h3>
-    <button class="btn" onclick="runQuery('stock')">1. Market Activity (Volume)</button>
-    <button class="btn" onclick="runQuery('macro')">2. GDP vs Unemployment</button>
-    <button class="btn" onclick="runQuery('confidence')">3. Consumer Confidence Impact</button>
-    <button class="btn" onclick="runQuery('commodity')">4. Oil & Gold Trend Analysis</button>
-    <button class="btn" onclick="runQuery('interestgdp')">5. Interest Rate vs GDP Growth</button>
-    <button class="btn" onclick="runQuery('phillips')">6. Phillips Curve (Inflation vs Unemployment)</button>
-    <button class="btn" onclick="runQuery('performance')">7. Stock Index Performance (Annual % Change)</button>
-    <button class="btn" onclick="runQuery('mainvestment')">8. M&A and Investment Trends</button>
-    <button class="btn" onclick="runQuery('realestate')">9. Real Estate & Interest Rate Analysis</button>
-    <button class="btn" onclick="runQuery('oilinflation')">10. Oil Price & Inflation Correlation</button>
+<div class="app-container">
+    <!-- 侧边栏 -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1>📊 MacroFin</h1>
+            <p>Big Data Analytics Platform</p>
+        </div>
 
+        <nav class="sidebar-nav">
+            <button class="nav-item" onclick="runQuery('stock')">
+                <span class="nav-number">1</span>
+                <span class="nav-text">Market Activity (Volume)</span>
+            </button>
+            <button class="nav-item" onclick="runQuery('macro')">
+                <span class="nav-number">2</span>
+                <span class="nav-text">GDP vs Unemployment</span>
+            </button>
+            <button class="nav-item" onclick="runQuery('confidence')">
+                <span class="nav-number">3</span>
+                <span class="nav-text">Consumer Confidence Impact</span>
+            </button>
+            <button class="nav-item" onclick="runQuery('commodity')">
+                <span class="nav-number">4</span>
+                <span class="nav-text">Oil & Gold Trend Analysis</span>
+            </button>
+            <button class="nav-item" onclick="runQuery('interestgdp')">
+                <span class="nav-number">5</span>
+                <span class="nav-text">Interest Rate vs GDP Growth</span>
+            </button>
+            <button class="nav-item" onclick="runQuery('phillips')">
+                <span class="nav-number">6</span>
+                <span class="nav-text">Phillips Curve Analysis</span>
+            </button>
+            <button class="nav-item" onclick="runQuery('performance')">
+                <span class="nav-number">7</span>
+                <span class="nav-text">Stock Index Performance</span>
+            </button>
+            <button class="nav-item" onclick="runQuery('mainvestment')">
+                <span class="nav-number">8</span>
+                <span class="nav-text">M&A and Investment Trends</span>
+            </button>
+            <button class="nav-item" onclick="runQuery('realestate')">
+                <span class="nav-number">9</span>
+                <span class="nav-text">Real Estate & Interest Rate</span>
+            </button>
+            <button class="nav-item" onclick="runQuery('oilinflation')">
+                <span class="nav-number">10</span>
+                <span class="nav-text">Oil Price & Inflation Correlation</span>
+            </button>
+        </nav>
+    </aside>
 
+    <!-- 主内容区 -->
+    <main class="main-content">
+        <div class="content-header">
+            <div id="currentQueryTitle" class="query-title-display">Awaiting Query Execution...</div>
+        </div>
 
-</div>
-
-<div class="result-stage">
-    <div id="currentQueryTitle" class="query-title-display">Awaiting Query Execution...</div>
-    <div id="mainChart"></div>
+        <div class="result-stage">
+            <div id="mainChart"></div>
+        </div>
+    </main>
 </div>
 
 <script>
@@ -123,6 +477,61 @@
 
     window.addEventListener('resize', function() {
         myChart.resize();
+    });
+
+    // 登录处理函数
+    function handleLogin(event) {
+        event.preventDefault();
+
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value.trim();
+        const errorMessage = document.getElementById('errorMessage');
+        const loginBtn = document.getElementById('loginBtn');
+
+        // 简单的演示验证（实际项目中应该调用后端API）
+        if (username === 'admin' && password === 'admin123') {
+            // 登录成功
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Signing In...';
+
+            setTimeout(() => {
+                // 隐藏登录界面
+                document.getElementById('loginContainer').classList.add('hidden');
+
+                // 保存登录状态到 sessionStorage
+                sessionStorage.setItem('isLoggedIn', 'true');
+                sessionStorage.setItem('username', username);
+
+                // 恢复按钮状态
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Sign In';
+            }, 800);
+        } else {
+            // 登录失败
+            errorMessage.classList.add('show');
+
+            // 3秒后隐藏错误信息
+            setTimeout(() => {
+                errorMessage.classList.remove('show');
+            }, 3000);
+
+            // 清空密码框
+            document.getElementById('password').value = '';
+            document.getElementById('password').focus();
+        }
+    }
+
+    // 检查登录状态
+    function checkLoginStatus() {
+        const isLoggedIn = sessionStorage.getItem('isLoggedIn');
+        if (isLoggedIn === 'true') {
+            document.getElementById('loginContainer').classList.add('hidden');
+        }
+    }
+
+    // 页面加载时检查登录状态
+    window.addEventListener('load', function() {
+        checkLoginStatus();
     });
 
     // 核心请求逻辑
@@ -188,6 +597,9 @@
                 myChart.hideLoading();
                 let option = buildChartOption(queryType, data);
                 myChart.setOption(option);
+
+                // 更新侧边栏激活状态
+                updateActiveNav(queryType);
             })
             .catch(error => {
                 myChart.hideLoading();
@@ -195,6 +607,18 @@
                 console.error('API Error:', error);
             });
     }
+
+    // 更新侧边栏激活状态
+    function updateActiveNav(queryType) {
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(item => {
+            item.classList.remove('active');
+            if (item.getAttribute('onclick').includes(`'${queryType}'`)) {
+                item.classList.add('active');
+            }
+        });
+    }
+
     //渐变色
     function getColorByIndex(index) {
         const colors = [
